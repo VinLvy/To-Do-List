@@ -13,6 +13,18 @@ module.exports = {
         static: './dist',
         open: true,
     },
+    module: {
+        rules: [
+            {
+                test: /\.css$/i, // For CSS files
+                use: ['style-loader', 'css-loader'],
+            },
+            {
+                test: /\.(png|jpg|jpeg|gif|svg)$/i, // For image files
+                type: 'asset/resource',
+            },
+        ],
+    },
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/template.html',
