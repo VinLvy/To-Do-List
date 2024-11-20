@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Todo List App</title>
-    <link rel="stylesheet" href="style.css"> <!-- Link to main CSS file -->
 </head>
 <body>
     <div id="app">
-        <!-- Header section -->
         <header>
             <h1>Todo List App</h1>
             <button id="new-project-btn">+ New Project</button>
@@ -17,19 +15,14 @@
         <!-- Sidebar for Projects -->
         <aside id="projects-sidebar">
             <h2>Projects</h2>
-            <ul id="project-list">
-                <li class="project active" data-project="default">Default Project</li>
-                <!-- Dynamically added projects will go here -->
-            </ul>
+            <ul id="project-list"></ul>
         </aside>
 
         <!-- Main content for Todo items -->
         <main id="main-content">
+            <h2 id="current-project-title">No Project Selected</h2>
             <section id="todo-list-section">
-                <h2 id="current-project-title">Default Project</h2>
-                <ul id="todo-list">
-                    <!-- Todo items will be injected here by JavaScript -->
-                </ul>
+                <ul id="todo-list"></ul>
             </section>
 
             <!-- Form to add a new Todo -->

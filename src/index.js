@@ -1,4 +1,4 @@
-import './style.css'
+import './style.css';
 
 class Todo {
     constructor(title, description, dueDate, priority) {
@@ -7,8 +7,6 @@ class Todo {
         this.dueDate = dueDate;
         this.priority = priority;
         this.completed = false;
-        this.notes = "";
-        this.checklist = [];
     }
 }
 
@@ -20,11 +18,21 @@ class Project {
 }
 
 const ProjectManager = (() => {
-    const projects = [];
+    let projects = [];
+    let currentProject = null;
+
     const addProject = (name) => {
-        projects.push(new Project(name));
-        saveToLocalStorage();
+        if (!projects.some(project => project.name === name)) {
+            projects.push(new Project(name));
+            saveToLocalStorage();
+        }
     };
+
+    const setCurrentProject = (name) => {
+        currentProject = projects.find(p => p.name === name) || null;
+        return currentProject;
+    };
+
     const addTodoToProject = (projectName, todo) => {
         const project = projects.find(p => p.name === projectName);
         if (project) {
@@ -32,70 +40,88 @@ const ProjectManager = (() => {
             saveToLocalStorage();
         }
     };
-    return { projects, addProject, addTodoToProject };
+
+    const getCurrentProject = () => currentProject;
+
+    const getProjects = () => projects;
+
+    const loadProjects = () => {
+        const savedProjects = JSON.parse(localStorage.getItem("projects"));
+        if (savedProjects) {
+            projects = savedProjects.map(projData => {
+                const project = new Project(projData.name);
+                project.todos = projData.todos.map(todoData => Object.assign(new Todo(), todoData));
+                return project;
+            });
+        } else {
+            // Add a default project if no saved data
+            addProject("Default Project");
+            setCurrentProject("Default Project");
+        }
+    };
+
+    return {
+        addProject,
+        addTodoToProject,
+        setCurrentProject,
+        getCurrentProject,
+        getProjects,
+        loadProjects,
+    };
 })();
 
 const saveToLocalStorage = () => {
-    localStorage.setItem("projects", JSON.stringify(ProjectManager.projects));
+    localStorage.setItem("projects", JSON.stringify(ProjectManager.getProjects()));
 };
 
-const loadFromLocalStorage = () => {
-    const savedProjects = JSON.parse(localStorage.getItem("projects"));
-    if (savedProjects) {
-        ProjectManager.projects = savedProjects.map(projData => {
-            const project = new Project(projData.name);
-            project.todos = projData.todos.map(todoData => Object.assign(new Todo(), todoData));
-            return project;
-        });
-    }
-};
-
-document.addEventListener("DOMContentLoaded", () => {
-    loadFromLocalStorage();
-    renderProjects();
-    setUpEventListeners();
-});
-
+// DOM manipulation functions
 const renderProjects = () => {
     const projectList = document.getElementById("project-list");
     projectList.innerHTML = ""; // Clear existing projects
-    ProjectManager.projects.forEach(project => {
+
+    ProjectManager.getProjects().forEach(project => {
         const projectItem = document.createElement("li");
         projectItem.textContent = project.name;
         projectItem.className = "project";
-        projectItem.addEventListener("click", () => renderTodos(project.name));
+        projectItem.addEventListener("click", () => {
+            ProjectManager.setCurrentProject(project.name);
+            renderTodos();
+        });
         projectList.appendChild(projectItem);
     });
 };
 
-const renderTodos = (projectName) => {
+const renderTodos = () => {
     const todoList = document.getElementById("todo-list");
-    const project = ProjectManager.projects.find(p => p.name === projectName);
     const projectTitle = document.getElementById("current-project-title");
 
-    if (project) {
-        projectTitle.textContent = project.name;
+    const currentProject = ProjectManager.getCurrentProject();
+    if (currentProject) {
+        projectTitle.textContent = currentProject.name;
         todoList.innerHTML = ""; // Clear existing todos
 
-        project.todos.forEach(todo => {
+        currentProject.todos.forEach(todo => {
             const todoItem = document.createElement("li");
             todoItem.className = `todo-item priority-${todo.priority}`;
             todoItem.innerHTML = `
                 <div>
-                    <strong>${todo.title}</strong> - ${todo.dueDate}
+                    <strong>${todo.title}</strong> - ${todo.dueDate || "No due date"}
                 </div>
                 <button class="delete-todo">Delete</button>
             `;
 
             // Delete todo logic
             todoItem.querySelector(".delete-todo").addEventListener("click", () => {
-                project.todos = project.todos.filter(t => t !== todo);
+                currentProject.todos = currentProject.todos.filter(t => t !== todo);
                 saveToLocalStorage();
-                renderTodos(projectName);
+                renderTodos();
             });
 
             todoList.appendChild(todoItem);
         });
+    } else {
+        projectTitle.textContent = "No Project Selected";
+        todoList.innerHTML = "<li>No todos available</li>";
     }
 };
 
@@ -105,7 +131,9 @@ const setUpEventListeners = () => {
         const projectName = prompt("Enter new project name:");
         if (projectName) {
             ProjectManager.addProject(projectName);
+            ProjectManager.setCurrentProject(projectName);
             renderProjects();
+            renderTodos();
         }
     });
 
@@ -117,12 +145,12 @@ const setUpEventListeners = () => {
         const description = document.getElementById("todo-description").value;
         const dueDate = document.getElementById("todo-dueDate").value;
         const priority = document.getElementById("todo-priority").value;
-        const currentProject = document.getElementById("current-project-title").textContent;
+        const currentProject = ProjectManager.getCurrentProject();
 
         if (title && currentProject) {
             const newTodo = new Todo(title, description, dueDate, priority);
-            ProjectManager.addTodoToProject(currentProject, newTodo);
-            renderTodos(currentProject);
+            ProjectManager.addTodoToProject(currentProject.name, newTodo);
+            renderTodos();
 
             // Reset form
             document.getElementById("todo-form").reset();
@@ -131,3 +159,11 @@ const setUpEventListeners = () => {
         }
     });
 };
+
+// Initialization
+document.addEventListener("DOMContentLoaded", () => {
+    ProjectManager.loadProjects();
+    renderProjects();
+    renderTodos();
+    setUpEventListeners();
+});
