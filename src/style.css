@@ -214,3 +214,17 @@ form button:hover {
         padding: 10px;
     }
 }
+
+.delete-project {
+    margin-left: 10px;
+    color: white;
+    background-color: red;
+    border: none;
+    border-radius: 3px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.delete-project:hover {
+    background-color: darkred;
+}

@@ -28,6 +28,14 @@ const ProjectManager = (() => {
         }
     };
 
+    const deleteProject = (name) => {
+        projects = projects.filter(project => project.name !== name);
+        if (currentProject && currentProject.name === name) {
+            currentProject = null; // Clear current project if it was deleted
+        }
+        saveToLocalStorage();
+    };
+
     const setCurrentProject = (name) => {
         currentProject = projects.find(p => p.name === name) || null;
         return currentProject;
@@ -62,6 +70,7 @@ const ProjectManager = (() => {
 
     return {
         addProject,
+        deleteProject,
         addTodoToProject,
         setCurrentProject,
         getCurrentProject,
@@ -81,14 +90,34 @@ const renderProjects = () => {
 
     ProjectManager.getProjects().forEach(project => {
         const projectItem = document.createElement("li");
-        projectItem.textContent = project.name;
         projectItem.className = "project";
-        projectItem.addEventListener("click", () => {
+
+        const projectNameSpan = document.createElement("span");
+        projectNameSpan.textContent = project.name;
+        projectNameSpan.addEventListener("click", () => {
             ProjectManager.setCurrentProject(project.name);
             renderTodos();
         });
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.className = "delete-project";
+        deleteButton.addEventListener("click", () => {
+            deleteProject(project.name);
+        });
+
+        projectItem.appendChild(projectNameSpan);
+        projectItem.appendChild(deleteButton);
         projectList.appendChild(projectItem);
     });
+};
+
+const deleteProject = (projectName) => {
+    if (confirm(`Are you sure you want to delete the project "${projectName}"?`)) {
+        ProjectManager.deleteProject(projectName); // Use the new deleteProject method
+        renderProjects();
+        renderTodos(); // Clear todos if the deleted project was selected
+    }
 };
 
 const renderTodos = () => {
