@@ -1,3 +1,5 @@
+import './style.css'
+
 class Todo {
     constructor(title, description, dueDate, priority) {
         this.title = title;
@@ -46,4 +48,86 @@ const loadFromLocalStorage = () => {
             return project;
         });
     }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadFromLocalStorage();
+    renderProjects();
+    setUpEventListeners();
+});
+
+const renderProjects = () => {
+    const projectList = document.getElementById("project-list");
+    projectList.innerHTML = ""; // Clear existing projects
+    ProjectManager.projects.forEach(project => {
+        const projectItem = document.createElement("li");
+        projectItem.textContent = project.name;
+        projectItem.className = "project";
+        projectItem.addEventListener("click", () => renderTodos(project.name));
+        projectList.appendChild(projectItem);
+    });
+};
+
+const renderTodos = (projectName) => {
+    const todoList = document.getElementById("todo-list");
+    const project = ProjectManager.projects.find(p => p.name === projectName);
+    const projectTitle = document.getElementById("current-project-title");
+
+    if (project) {
+        projectTitle.textContent = project.name;
+        todoList.innerHTML = ""; // Clear existing todos
+
+        project.todos.forEach(todo => {
+            const todoItem = document.createElement("li");
+            todoItem.className = `todo-item priority-${todo.priority}`;
+            todoItem.innerHTML = `
+                <div>
+                    <strong>${todo.title}</strong> - ${todo.dueDate}
+                </div>
+                <button class="delete-todo">Delete</button>
+            `;
+
+            // Delete todo logic
+            todoItem.querySelector(".delete-todo").addEventListener("click", () => {
+                project.todos = project.todos.filter(t => t !== todo);
+                saveToLocalStorage();
+                renderTodos(projectName);
+            });
+
+            todoList.appendChild(todoItem);
+        });
+    }
+};
+
+const setUpEventListeners = () => {
+    // Add new project
+    document.getElementById("new-project-btn").addEventListener("click", () => {
+        const projectName = prompt("Enter new project name:");
+        if (projectName) {
+            ProjectManager.addProject(projectName);
+            renderProjects();
+        }
+    });
+
+    // Add new todo
+    document.getElementById("todo-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const title = document.getElementById("todo-title").value;
+        const description = document.getElementById("todo-description").value;
+        const dueDate = document.getElementById("todo-dueDate").value;
+        const priority = document.getElementById("todo-priority").value;
+        const currentProject = document.getElementById("current-project-title").textContent;
+
+        if (title && currentProject) {
+            const newTodo = new Todo(title, description, dueDate, priority);
+            ProjectManager.addTodoToProject(currentProject, newTodo);
+            renderTodos(currentProject);
+
+            // Reset form
+            document.getElementById("todo-form").reset();
+        } else {
+            alert("Please provide a title and select a project.");
+        }
+    });
 };
