@@ -216,7 +216,7 @@ form button:hover {
 }
 
 .delete-project {
-    margin-left: 10px;
+    float: right;
     color: white;
     background-color: red;
     border: none;
