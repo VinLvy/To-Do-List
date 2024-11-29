@@ -92,11 +92,20 @@ const renderProjects = () => {
         const projectItem = document.createElement("li");
         projectItem.className = "project";
 
+        // Highlight the selected project
+        if (ProjectManager.getCurrentProject() && ProjectManager.getCurrentProject().name === project.name) {
+            projectItem.classList.add("active");
+        }
+
         const projectNameSpan = document.createElement("span");
         projectNameSpan.textContent = project.name;
-        projectNameSpan.addEventListener("click", () => {
+
+        projectItem.addEventListener("click", (e) => {
+            if (e.target.classList.contains("delete-project")) return;
+
             ProjectManager.setCurrentProject(project.name);
-            renderTodos();
+            renderProjects(); // Re-render projects to update active state
+            renderTodos(); // Render todos for the selected project
         });
 
         const deleteButton = document.createElement("button");
@@ -111,6 +120,7 @@ const renderProjects = () => {
         projectList.appendChild(projectItem);
     });
 };
+
 
 const deleteProject = (projectName) => {
     if (confirm(`Are you sure you want to delete the project "${projectName}"?`)) {

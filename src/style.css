@@ -83,11 +83,11 @@ header button:hover {
 }
 
 .project.active {
-    background-color: #007bff;
+    background-color: #174f8a;
 }
 
 .project:hover {
-    background-color: #6c757d;
+    background-color: #0f314f;
 }
 
 /* Main Content */
