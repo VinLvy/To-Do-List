@@ -139,6 +139,14 @@ const renderTodos = () => {
                 <button class="delete-todo">Delete</button>
             `;
 
+            // Add click event to show details
+            todoItem.addEventListener("click", (e) => {
+                // Avoid triggering the click when the delete button is clicked
+                if (e.target.classList.contains("delete-todo")) return;
+
+                showTodoDetails(todo);
+            });
+
             // Delete todo logic
             todoItem.querySelector(".delete-todo").addEventListener("click", () => {
                 currentProject.todos = currentProject.todos.filter(t => t !== todo);
@@ -153,6 +161,24 @@ const renderTodos = () => {
         todoList.innerHTML = "<li>No todos available</li>";
     }
 };
+
+// Function to show details in the modal
+const showTodoDetails = (todo) => {
+    // Populate modal with todo details
+    document.getElementById("todo-modal-title").textContent = todo.title;
+    document.getElementById("todo-modal-description").textContent = todo.description || "No description provided";
+    document.getElementById("todo-modal-dueDate").textContent = todo.dueDate || "No due date";
+    document.getElementById("todo-modal-priority").textContent = todo.priority || "No priority";
+
+    // Show the modal
+    document.getElementById("todo-details-modal").style.display = "block";
+};
+
+// Close modal functionality
+document.getElementById("close-modal").addEventListener("click", () => {
+    document.getElementById("todo-details-modal").style.display = "none";
+});
+
 
 const setUpEventListeners = () => {
     // Add new project
