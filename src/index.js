@@ -1,5 +1,6 @@
 import './style.css';
 
+// Classes for Todo and Project
 class Todo {
     constructor(title, description, dueDate, priority) {
         this.title = title;
@@ -17,9 +18,28 @@ class Project {
     }
 }
 
+// Project Manager Module
 const ProjectManager = (() => {
     let projects = [];
     let currentProject = null;
+
+    const saveToLocalStorage = () => {
+        localStorage.setItem("projects", JSON.stringify(projects));
+    };
+
+    const loadProjects = () => {
+        const savedProjects = JSON.parse(localStorage.getItem("projects"));
+        if (savedProjects) {
+            projects = savedProjects.map(projData => {
+                const project = new Project(projData.name);
+                project.todos = projData.todos.map(todoData => Object.assign(new Todo(), todoData));
+                return project;
+            });
+        } else {
+            addProject("Default Project");
+            setCurrentProject("Default Project");
+        }
+    };
 
     const addProject = (name) => {
         if (!projects.some(project => project.name === name)) {
@@ -31,7 +51,7 @@ const ProjectManager = (() => {
     const deleteProject = (name) => {
         projects = projects.filter(project => project.name !== name);
         if (currentProject && currentProject.name === name) {
-            currentProject = null; // Clear current project if it was deleted
+            currentProject = null;
         }
         saveToLocalStorage();
     };
@@ -53,21 +73,6 @@ const ProjectManager = (() => {
 
     const getProjects = () => projects;
 
-    const loadProjects = () => {
-        const savedProjects = JSON.parse(localStorage.getItem("projects"));
-        if (savedProjects) {
-            projects = savedProjects.map(projData => {
-                const project = new Project(projData.name);
-                project.todos = projData.todos.map(todoData => Object.assign(new Todo(), todoData));
-                return project;
-            });
-        } else {
-            // Add a default project if no saved data
-            addProject("Default Project");
-            setCurrentProject("Default Project");
-        }
-    };
-
     return {
         addProject,
         deleteProject,
@@ -79,20 +84,15 @@ const ProjectManager = (() => {
     };
 })();
 
-const saveToLocalStorage = () => {
-    localStorage.setItem("projects", JSON.stringify(ProjectManager.getProjects()));
-};
-
-// DOM manipulation functions
+// DOM Manipulation Functions
 const renderProjects = () => {
     const projectList = document.getElementById("project-list");
-    projectList.innerHTML = ""; // Clear existing projects
+    projectList.innerHTML = "";
 
     ProjectManager.getProjects().forEach(project => {
         const projectItem = document.createElement("li");
         projectItem.className = "project";
 
-        // Highlight the selected project
         if (ProjectManager.getCurrentProject() && ProjectManager.getCurrentProject().name === project.name) {
             projectItem.classList.add("active");
         }
@@ -104,8 +104,8 @@ const renderProjects = () => {
             if (e.target.classList.contains("delete-project")) return;
 
             ProjectManager.setCurrentProject(project.name);
-            renderProjects(); // Re-render projects to update active state
-            renderTodos(); // Render todos for the selected project
+            renderProjects();
+            renderTodos();
         });
 
         const deleteButton = document.createElement("button");
@@ -121,23 +121,22 @@ const renderProjects = () => {
     });
 };
 
-
 const deleteProject = (projectName) => {
     if (confirm(`Are you sure you want to delete the project "${projectName}"?`)) {
-        ProjectManager.deleteProject(projectName); // Use the new deleteProject method
+        ProjectManager.deleteProject(projectName);
         renderProjects();
-        renderTodos(); // Clear todos if the deleted project was selected
+        renderTodos();
     }
 };
 
 const renderTodos = () => {
     const todoList = document.getElementById("todo-list");
     const projectTitle = document.getElementById("current-project-title");
-
     const currentProject = ProjectManager.getCurrentProject();
+
     if (currentProject) {
         projectTitle.textContent = currentProject.name;
-        todoList.innerHTML = ""; // Clear existing todos
+        todoList.innerHTML = "";
 
         currentProject.todos.forEach(todo => {
             const todoItem = document.createElement("li");
@@ -149,18 +148,15 @@ const renderTodos = () => {
                 <button class="delete-todo">Delete</button>
             `;
 
-            // Add click event to show details
             todoItem.addEventListener("click", (e) => {
-                // Avoid triggering the click when the delete button is clicked
                 if (e.target.classList.contains("delete-todo")) return;
 
                 showTodoDetails(todo);
             });
 
-            // Delete todo logic
             todoItem.querySelector(".delete-todo").addEventListener("click", () => {
                 currentProject.todos = currentProject.todos.filter(t => t !== todo);
-                saveToLocalStorage();
+                ProjectManager.addTodoToProject(currentProject.name, currentProject.todos);
                 renderTodos();
             });
 
@@ -172,26 +168,20 @@ const renderTodos = () => {
     }
 };
 
-// Function to show details in the modal
 const showTodoDetails = (todo) => {
-    // Populate modal with todo details
     document.getElementById("todo-modal-title").textContent = todo.title;
     document.getElementById("todo-modal-description").textContent = todo.description || "No description provided";
     document.getElementById("todo-modal-dueDate").textContent = todo.dueDate || "No due date";
     document.getElementById("todo-modal-priority").textContent = todo.priority || "No priority";
 
-    // Show the modal
     document.getElementById("todo-details-modal").style.display = "block";
 };
 
-// Close modal functionality
 document.getElementById("close-modal").addEventListener("click", () => {
     document.getElementById("todo-details-modal").style.display = "none";
 });
 
-
 const setUpEventListeners = () => {
-    // Add new project
     document.getElementById("new-project-btn").addEventListener("click", () => {
         const projectName = prompt("Enter new project name:");
         if (projectName) {
@@ -202,7 +192,6 @@ const setUpEventListeners = () => {
         }
     });
 
-    // Add new todo
     document.getElementById("todo-form").addEventListener("submit", (event) => {
         event.preventDefault();
 
@@ -216,14 +205,32 @@ const setUpEventListeners = () => {
             const newTodo = new Todo(title, description, dueDate, priority);
             ProjectManager.addTodoToProject(currentProject.name, newTodo);
             renderTodos();
-
-            // Reset form
             document.getElementById("todo-form").reset();
         } else {
             alert("Please provide a title and select a project.");
         }
     });
 };
+
+// Add Todo Modal Logic
+const addTodoBtn = document.getElementById("add-todo-btn");
+const addTodoModal = document.getElementById("add-todo-modal");
+const closeTodoModal = document.getElementById("close-todo-modal");
+
+addTodoBtn.addEventListener("click", () => {
+    addTodoModal.style.display = "flex";
+});
+
+closeTodoModal.addEventListener("click", () => {
+    addTodoModal.style.display = "none";
+});
+
+window.addEventListener("click", (event) => {
+    if (event.target === addTodoModal) {
+        addTodoModal.style.display = "none";
+    }
+});
+
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
