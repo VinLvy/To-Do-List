@@ -84,6 +84,11 @@ const ProjectManager = (() => {
     };
 })();
 
+// save
+const saveToLocalStorage = () => {
+    localStorage.setItem("projects", JSON.stringify(ProjectManager.getProjects()));
+};
+
 // DOM Manipulation Functions
 const renderProjects = () => {
     const projectList = document.getElementById("project-list");
@@ -154,9 +159,10 @@ const renderTodos = () => {
                 showTodoDetails(todo);
             });
 
+            // Delete logic
             todoItem.querySelector(".delete-todo").addEventListener("click", () => {
                 currentProject.todos = currentProject.todos.filter(t => t !== todo);
-                ProjectManager.addTodoToProject(currentProject.name, currentProject.todos);
+                saveToLocalStorage();
                 renderTodos();
             });
 
