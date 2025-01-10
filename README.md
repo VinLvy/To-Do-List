@@ -16,20 +16,6 @@ This is a JavaScript-based web application that allows users to manage their pro
 - **`style.css`**: Provides styling for the application, including a modern look for buttons and priority-based todo styles.
 - **`script.js`**: Contains the core logic for managing projects, todos, and user interactions.
 
-## Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/todo-project.git
-   ```
-
-2. Navigate to the project directory:
-   ```bash
-   cd todo-project
-   ```
-
-3. Open the `index.html` file in your browser to start using the application.
-
 ## Usage
 
 ### Managing Projects
